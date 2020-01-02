@@ -5,6 +5,8 @@ states = {
     CONFIGURATION = 3,
 }
 
+stateHandler = {}
+
 function mainMenuUpdate()
 end
 
@@ -19,27 +21,49 @@ function mainMenuKeyPressed(key)
     end
 end
 
-stateHandler = {}
 stateHandler[states.MAIN_MENU] = {
     update = mainMenuUpdate,
     draw = mainMenuDraw,
     keypressed = mainMenuKeyPressed,
 }
 
-game = {
-    state = states.MAIN_MENU,
-}
-
 player = {
     position = {
         x = 100,
         y = 100
-    }
+    },
     rotation = 0,
     size = {
         x = 50,
         y = 50
     }
+}
+
+function playerDraw()
+    local pos = player.position
+    local size = player.size
+    love.graphics.circle('line', pos.x, pos.y, size.x)
+    love.graphics.line(pos.x, pos.y, pos.x, pos.x + size.x)
+end
+
+function playingUpdate()
+end
+
+function playingDraw()
+    playerDraw()
+end
+
+function playingKeypressed(key)
+end
+
+stateHandler[states.PLAYING] = {
+    update = playingUpdate,
+    draw = playingDraw,
+    keypressed = playingKeypressed
+}
+
+game = {
+    state = states.MAIN_MENU,
 }
 
 function getCorrectFunction(operation)
