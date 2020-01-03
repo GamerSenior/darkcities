@@ -1,3 +1,6 @@
+require('rendermath')
+local inspect = require('lib/inspect')
+
 states = {
     MAIN_MENU = 0,
     PLAYING = 1,
@@ -43,7 +46,8 @@ function playerDraw()
     local pos = player.position
     local size = player.size
     love.graphics.circle('line', pos.x, pos.y, size.x)
-    love.graphics.line(pos.x, pos.y, pos.x, pos.x + size.x)
+    local p2_line = rotate_point(pos, {x = pos.x, y = pos.x + size.x}, player.rotation)
+    love.graphics.line(pos.x, pos.y, p2_line.x, p2_line.y)
 end
 
 function playingUpdate()
@@ -105,6 +109,15 @@ function love.keypressed(key)
 end
 
 function love.keyreleased(key)
+end
+
+function love.mousemoved(x, y, dx, dy, isTouch)
+    print("player: x[" .. player.position.x .."] y[" .. player.position.y .. "]")
+    print("mouse: x[" .. x .. "] y[" .. y .."]")
+    if game.state == states.PLAYING then
+       local theta = get_angle(player.position, {x = x, y = y})
+       player.rotation = theta
+    end
 end
 
 function love.quit()
