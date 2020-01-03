@@ -37,27 +37,65 @@ player = {
     },
     rotation = 0,
     size = {
-        x = 50,
-        y = 50
+        x = 10,
+        y = 10
     }
 }
 
 function playerDraw()
-    local pos = player.position
+    local x, y = player.body:getPosition()
+    print("X[" ..x.. "] Y[" ..y.."]")
+    local pos = {x = x, y = y}
     local size = player.size
     love.graphics.circle('line', pos.x, pos.y, size.x)
     local p2_line = rotate_point(pos, {x = pos.x, y = pos.x + size.x}, player.rotation)
     love.graphics.line(pos.x, pos.y, p2_line.x, p2_line.y)
 end
 
-function playingUpdate()
+function playingUpdate(dt)
+    game.world:update(dt)
 end
 
 function playingDraw()
-    playerDraw()
+    --playerDraw()
+
+    -- Draw some world shapes for collision debugging
+    for _, body in pairs(game.world:getBodies()) do
+        for _, fixture in pairs(body:getFixtures()) do
+            local shape = fixture:getShape()
+
+            if shape:typeOf("CircleShape") then
+                local cx, cy = body:getWorldPoints(shape:getPoint())
+                love.graphics.circle("line", cx, cy, shape:getRadius())
+            elseif shape:typeOf("PolygonShape") then
+                love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
+            else 
+                love.graphics.line(body:getWorldPoints(shape:getPoints()))
+            end
+        end
+    end
 end
 
 function playingKeypressed(key)
+    local vx, vy = player.body:getLinearVelocity()
+    print(vx .. " " .. vy)
+    if key == 'up' or key == 'w' then
+        if vy < 100 then
+            player.body:applyForce(0, 500)
+        end
+    elseif key == 'down' or key == 's' then
+        if vy > -100 then
+            player.body:applyForce(0, -500)
+        end
+    elseif key == 'left' or key == 'a' then
+        if vx > -100 then
+            player.body:applyForce(-500, 0)
+        end
+    elseif key == 'right' or key == 'd' then
+        if vx < 100 then
+            player.body:applyForce(500, 0)
+        end
+    end
 end
 
 stateHandler[states.PLAYING] = {
@@ -68,6 +106,7 @@ stateHandler[states.PLAYING] = {
 
 game = {
     state = states.MAIN_MENU,
+    world = nil,
 }
 
 function getCorrectFunction(operation)
@@ -81,12 +120,19 @@ end
 
 
 function love.load()
+    love.keyboard.setKeyRepeat(true)
+
+    game.world = love.physics.newWorld(0, 0, true)
+    player.body = love.physics.newBody(game.world, 100, 100, 'dynamic')
+    player.body:setLinearDamping(1)
+    pShape = love.physics.newCircleShape(player.size.x)
+    pFixture = love.physics.newFixture(player.body, pShape, 1)
 end
 
 function love.update(dt)
     local updateFunc = getCorrectFunction('update')
     if (updateFunc) then
-        updateFunc()
+        updateFunc(dt)
     else
         print("Error: Update function doesn't exist")
     end
@@ -112,8 +158,8 @@ function love.keyreleased(key)
 end
 
 function love.mousemoved(x, y, dx, dy, isTouch)
-    print("player: x[" .. player.position.x .."] y[" .. player.position.y .. "]")
-    print("mouse: x[" .. x .. "] y[" .. y .."]")
+    --print("player: x[" .. player.position.x .."] y[" .. player.position.y .. "]")
+    --print("mouse: x[" .. x .. "] y[" .. y .."]")
     if game.state == states.PLAYING then
        local theta = get_angle(player.position, {x = x, y = y})
        player.rotation = theta
@@ -121,5 +167,6 @@ function love.mousemoved(x, y, dx, dy, isTouch)
 end
 
 function love.quit()
+    game.world:destroy()
     print("Quiting program")
 end

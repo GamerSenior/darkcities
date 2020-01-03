@@ -41,6 +41,6 @@ function get_angle(p1, p2)
     -- Inverted because y axis is from top to bottom
     local delta_y = p2.y - p1.y
     theta_radians = - math.atan2(delta_y, delta_x) + (math.pi/2)
-    print(theta_radians)
+    --print(theta_radians)
     return theta_radians
 end
