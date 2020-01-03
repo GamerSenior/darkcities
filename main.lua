@@ -31,10 +31,7 @@ stateHandler[states.MAIN_MENU] = {
 }
 
 player = {
-    position = {
-        x = 100,
-        y = 100
-    },
+    body = nil,
     rotation = 0,
     size = {
         x = 10,
@@ -42,33 +39,37 @@ player = {
     }
 }
 
-function playerDraw()
-    local x, y = player.body:getPosition()
-    print("X[" ..x.. "] Y[" ..y.."]")
-    local pos = {x = x, y = y}
+renderPlane = { x = 0, y = love.graphics.getHeight() }
+
+function drawPlayerDirection()
+    local px, py = player.body:getPosition()
     local size = player.size
-    love.graphics.circle('line', pos.x, pos.y, size.x)
-    local p2_line = rotate_point(pos, {x = pos.x, y = pos.x + size.x}, player.rotation)
-    love.graphics.line(pos.x, pos.y, p2_line.x, p2_line.y)
+    local p2_line = rotate_point({x = px, y = py}, {x = px, y = px + size.x}, player.rotation)
+    p2_line = translate_point(renderPlane, p2_line)
+    print(inspect(p2_line))
+    love.graphics.line(px, py, p2_line.x, p2_line.y)
 end
 
 function playerControls()
     local vx, vy = player.body:getLinearVelocity()
-    print(vx .. " " .. vy)
+    --print(vx .. " " .. vy)
 
     if love.keyboard.isDown('d') then
         if vx < 100 then
             player.body:applyForce(500, 0)
         end
-    elseif love.keyboard.isDown('a') then
+    end
+    if love.keyboard.isDown('a') then
         if vx > -100 then
             player.body:applyForce(-500, 0)
         end
-    elseif love.keyboard.isDown('w') then
+    end
+    if love.keyboard.isDown('w') then
         if vy < 100 then
             player.body:applyForce(0, 500)
         end
-    elseif love.keyboard.isDown('s') then
+    end
+    if love.keyboard.isDown('s') then
         if vy > -100 then
             player.body:applyForce(0, -500)
         end
@@ -83,7 +84,7 @@ end
 
 function playingDraw()
     --playerDraw()
-
+    --drawPlayerDirection()
     -- Draw some world shapes for collision debugging
     for _, body in pairs(game.world:getBodies()) do
         for _, fixture in pairs(body:getFixtures()) do
@@ -91,7 +92,14 @@ function playingDraw()
 
             if shape:typeOf("CircleShape") then
                 local cx, cy = body:getWorldPoints(shape:getPoint())
-                love.graphics.circle("line", cx, cy, shape:getRadius())
+                local position = {x = cx, y = cy}
+                position = invert_point_on_y_axis(position)
+                -- print("Rotated:")
+                -- print(inspect(position))
+                position = translate_point(renderPlane, position)
+                -- print("Translated:")
+                -- print(inspect(position))
+                love.graphics.circle("line", position.x, position.y, shape:getRadius())
             elseif shape:typeOf("PolygonShape") then
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
             else 
@@ -126,11 +134,15 @@ end
 
 
 function love.load()
+    game.width = love.graphics.getWidth()
+    game.height = love.graphics.getHeight()
+
     game.world = love.physics.newWorld(0, 0, true)
-    player.body = love.physics.newBody(game.world, 100, 100, 'dynamic')
-    player.body:setLinearDamping(1)
-    pShape = love.physics.newCircleShape(player.size.x)
-    pFixture = love.physics.newFixture(player.body, pShape, 1)
+
+    player.body = love.physics.newBody(game.world, 0, 0, 'dynamic')
+    player.body:setLinearDamping(5)
+    local pShape = love.physics.newCircleShape(player.size.x)
+    local pFixture = love.physics.newFixture(player.body, pShape, 1)
 end
 
 function love.update(dt)
@@ -164,8 +176,9 @@ end
 function love.mousemoved(x, y, dx, dy, isTouch)
     --print("player: x[" .. player.position.x .."] y[" .. player.position.y .. "]")
     --print("mouse: x[" .. x .. "] y[" .. y .."]")
+    local px, py = player.body:getPosition()
     if game.state == states.PLAYING then
-       local theta = get_angle(player.position, {x = x, y = y})
+       local theta = get_angle({x = px, y = py}, {x = x, y = y})
        player.rotation = theta
     end
 end
