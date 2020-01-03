@@ -52,8 +52,33 @@ function playerDraw()
     love.graphics.line(pos.x, pos.y, p2_line.x, p2_line.y)
 end
 
+function playerControls()
+    local vx, vy = player.body:getLinearVelocity()
+    print(vx .. " " .. vy)
+
+    if love.keyboard.isDown('d') then
+        if vx < 100 then
+            player.body:applyForce(500, 0)
+        end
+    elseif love.keyboard.isDown('a') then
+        if vx > -100 then
+            player.body:applyForce(-500, 0)
+        end
+    elseif love.keyboard.isDown('w') then
+        if vy < 100 then
+            player.body:applyForce(0, 500)
+        end
+    elseif love.keyboard.isDown('s') then
+        if vy > -100 then
+            player.body:applyForce(0, -500)
+        end
+    end
+end
+
 function playingUpdate(dt)
     game.world:update(dt)
+
+    playerControls()
 end
 
 function playingDraw()
@@ -77,25 +102,6 @@ function playingDraw()
 end
 
 function playingKeypressed(key)
-    local vx, vy = player.body:getLinearVelocity()
-    print(vx .. " " .. vy)
-    if key == 'up' or key == 'w' then
-        if vy < 100 then
-            player.body:applyForce(0, 500)
-        end
-    elseif key == 'down' or key == 's' then
-        if vy > -100 then
-            player.body:applyForce(0, -500)
-        end
-    elseif key == 'left' or key == 'a' then
-        if vx > -100 then
-            player.body:applyForce(-500, 0)
-        end
-    elseif key == 'right' or key == 'd' then
-        if vx < 100 then
-            player.body:applyForce(500, 0)
-        end
-    end
 end
 
 stateHandler[states.PLAYING] = {
@@ -120,8 +126,6 @@ end
 
 
 function love.load()
-    love.keyboard.setKeyRepeat(true)
-
     game.world = love.physics.newWorld(0, 0, true)
     player.body = love.physics.newBody(game.world, 100, 100, 'dynamic')
     player.body:setLinearDamping(1)
