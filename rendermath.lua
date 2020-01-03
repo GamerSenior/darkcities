@@ -1,5 +1,7 @@
 local inspect = require('lib/inspect')
 
+--TODO Create class that can build a transformation matrix from other matrices
+
 function rotate_point(p1, p2, angle)
     local rotation_matrix = {
         {math.cos(angle), -math.sin(angle), -p1.x * math.cos(angle) + p1.y * math.sin(angle) + p1.x},
