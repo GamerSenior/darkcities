@@ -31,12 +31,17 @@ function TransformationMatrix:translate(x, y)
     self.result = multiply_matrix(self.result, trans_matrix)
 end
 
-function TransformationMatrix:reflect()
+function TransformationMatrix:reflect_y()
     self.result = multiply_matrix(self.result, REFLECT_MATRIX)
 end
 
 function TransformationMatrix:rotate(angle)
-    -- TODO implement rotation
+    rotate_matrix = {
+        {math.cos(angle), -math.sin(angle), 0},
+        {math.sin(angle), math.cos(angle), 0},
+        {0, 0, 1}
+    }
+    self.result = multiply_matrix(self.result, rotate_matrix)
 end
 
 function TransformationMatrix:transform(matrix)

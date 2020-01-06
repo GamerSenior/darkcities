@@ -1,8 +1,8 @@
-require('transformationMatrix')
-local inspect = require('lib/inspect')
+require('../transformationMatrix')
+local inspect = require('../lib/inspect')
 
 transMatrix = TransformationMatrix:new()
-transMatrix:reflect()
+transMatrix:reflect_y()
 print("Reflecting...")
 print(inspect(transMatrix.result))
 transMatrix:translate(10, 10)
