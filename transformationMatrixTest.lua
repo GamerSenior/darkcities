@@ -1,0 +1,11 @@
+require('transformationMatrix')
+local inspect = require('lib/inspect')
+
+transMatrix = TransformationMatrix:new()
+transMatrix:reflect()
+print("Reflecting...")
+print(inspect(transMatrix.result))
+transMatrix:translate(10, 10)
+print("Translating...")
+print(inspect(transMatrix.result))
+print(inspect(transMatrix:transform({{10}, {10}, {1}})))
