@@ -51,6 +51,11 @@ function TransformationMatrix:transform(matrix)
     return multiply_matrix(self.result, matrix)
 end
 
+function TransformationMatrix:transform_to_point(matrix)
+    matrix = multiply_matrix(self.result, matrix)
+    return {x = matrix[1][1], y = matrix[2][1]}
+end
+
 function multiply_matrix(m1, m2)
     local res = {}
     --print(inspect(m1))

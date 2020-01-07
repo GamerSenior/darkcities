@@ -92,6 +92,9 @@ function playingDraw()
             elseif shape:typeOf("PolygonShape") then
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
             else 
+                print('Drawing ' .. shape:type())
+                print('Line position: ', body:getWorldPoints(shape:getPoints()))
+                x1, y1, x2, y2 = body:getWorldPoints(shape:getPoints())
                 love.graphics.line(body:getWorldPoints(shape:getPoints()))
             end
         end
@@ -125,13 +128,37 @@ end
 function love.load()
     game.width = love.graphics.getWidth()
     game.height = love.graphics.getHeight()
+    print('Game width[' .. game.width .. '] height[' .. game.height .. ']')
 
     game.world = love.physics.newWorld(0, 0, true)
+    createPlayerPhysics()
+    createWorldBoundries()
+end
 
+function createPlayerPhysics()
     player.body = love.physics.newBody(game.world, 0, 0, 'dynamic')
     player.body:setLinearDamping(5)
     local pShape = love.physics.newCircleShape(player.size.x)
     local pFixture = love.physics.newFixture(player.body, pShape, 1)
+end
+
+function createWorldBoundries()
+    createLine(createPoint(0, 0), createPoint(game.width, 0))
+    createLine(createPoint(game.width, 0), createPoint(game.width, game.height))
+    createLine(createPoint(game.width, game.height), createPoint(0, game.height))
+    createLine(createPoint(0, game.height), createPoint(0, 0))
+end
+
+function createPoint(x, y)
+    return {x = x, y = y}
+end
+
+function createLine(pointA, pointB)
+    print(inspect(pointA))
+    print(inspect(pointB))
+    local lineBody = love.physics.newBody(game.world, pointA.x, pointA.y, 'static')
+    local lineShape = love.physics.newEdgeShape(pointA.x, pointA.y, pointB.x, pointB.y)
+    local lineFixture = love.physics.newFixture(lineBody, lineShape, 1)
 end
 
 function love.update(dt)
