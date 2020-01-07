@@ -1,3 +1,5 @@
+local inspect = require 'lib/inspect'
+
 REFLECT_MATRIX = {
     {1, 0, 0},
     {0, -1, 0},
@@ -13,10 +15,11 @@ TransformationMatrix = {
 }
 
 function TransformationMatrix:new (...)
+    local arg={...}
     o = {}
     setmetatable(o, self)
     self.__index = self
-    for _, v in ipairs(arg) do
+    for i, v in ipairs(arg) do
         o.result = multiply_matrix(o.result, v)
     end
     return o

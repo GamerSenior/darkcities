@@ -1,4 +1,5 @@
 require('rendermath')
+require('transformationMatrix')
 local inspect = require('lib/inspect')
 
 states = {
@@ -40,15 +41,9 @@ player = {
 }
 
 renderPlane = { x = 0, y = love.graphics.getHeight() }
-
-function drawPlayerDirection()
-    local px, py = player.body:getPosition()
-    local size = player.size
-    local p2_line = rotate_point({x = px, y = py}, {x = px, y = px + size.x}, player.rotation)
-    p2_line = translate_point(renderPlane, p2_line)
-    print(inspect(p2_line))
-    love.graphics.line(px, py, p2_line.x, p2_line.y)
-end
+local renderTransformation = TransformationMatrix:new()
+renderTransformation:translate(renderPlane.x, renderPlane.y)
+renderTransformation:reflect_y()
 
 function playerControls()
     local vx, vy = player.body:getLinearVelocity()
@@ -83,8 +78,6 @@ function playingUpdate(dt)
 end
 
 function playingDraw()
-    --playerDraw()
-    --drawPlayerDirection()
     -- Draw some world shapes for collision debugging
     for _, body in pairs(game.world:getBodies()) do
         for _, fixture in pairs(body:getFixtures()) do
@@ -92,13 +85,9 @@ function playingDraw()
 
             if shape:typeOf("CircleShape") then
                 local cx, cy = body:getWorldPoints(shape:getPoint())
-                local position = {x = cx, y = cy}
-                position = invert_point_on_y_axis(position)
-                -- print("Rotated:")
-                -- print(inspect(position))
-                position = translate_point(renderPlane, position)
-                -- print("Translated:")
-                -- print(inspect(position))
+                local renderMatrix = renderTransformation:transform({{cx}, {cy}, {1}})
+                local position = {x = renderMatrix[1][1], y = renderMatrix[2][1]}
+                print(inspect(position))
                 love.graphics.circle("line", position.x, position.y, shape:getRadius())
             elseif shape:typeOf("PolygonShape") then
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
