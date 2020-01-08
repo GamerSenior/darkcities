@@ -80,7 +80,7 @@ end
 function playingDraw()
     -- Draw some world shapes for collision debugging
     for _, body in pairs(game.world:getBodies()) do
-        for _, fixture in pairs(body:getFixtures()) do
+        for i, fixture in pairs(body:getFixtures()) do
             local shape = fixture:getShape()
 
             if shape:typeOf("CircleShape") then
@@ -93,9 +93,12 @@ function playingDraw()
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
             else 
                 print('Drawing ' .. shape:type())
-                print('Line position: ', body:getWorldPoints(shape:getPoints()))
                 x1, y1, x2, y2 = body:getWorldPoints(shape:getPoints())
-                love.graphics.line(body:getWorldPoints(shape:getPoints()))
+                print('Point A', x1, y1, 'Point B', x2, y2)
+                local pointA = renderTransformation:transform_to_point({{x1}, {y1}, {1}})
+                local pointB = renderTransformation:transform_to_point({{x2}, {y2}, {1}})
+                print('Point A', inspect(pointA), 'Point B', inspect(pointB))
+                love.graphics.line(pointA.x, pointA.y, pointB.x, pointB.y)
             end
         end
     end
@@ -144,9 +147,9 @@ end
 
 function createWorldBoundries()
     createLine(createPoint(0, 0), createPoint(game.width, 0))
-    createLine(createPoint(game.width, 0), createPoint(game.width, game.height))
-    createLine(createPoint(game.width, game.height), createPoint(0, game.height))
-    createLine(createPoint(0, game.height), createPoint(0, 0))
+    --createLine(createPoint(game.width, 0), createPoint(game.width, game.height))
+    --createLine(createPoint(game.width, game.height), createPoint(0, game.height))
+    --createLine(createPoint(0, game.height), createPoint(0, 0))
 end
 
 function createPoint(x, y)
