@@ -93,7 +93,7 @@ function playingDraw()
 
                 -- Get rotation line
                 local circlePoint = {x = position.x, y = position.x + player.size.x }
-                local lineEnd = rotate_point(position, circlePoint, player.rotation + (math.pi/2))
+                local lineEnd = rotate_point(position, circlePoint, player.rotation)
                 --print('Rotation line: ', inspect(lineEnd))
                 --print('Theta: ', player.rotation + math.pi / 2)
                 love.graphics.line(position.x, position.y, lineEnd.x, lineEnd.y)
