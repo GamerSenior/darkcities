@@ -82,17 +82,24 @@ function playingDraw()
     for _, body in pairs(game.world:getBodies()) do
         for i, fixture in pairs(body:getFixtures()) do
             local shape = fixture:getShape()
+            --print('Drawing ' .. shape:type())
 
             if shape:typeOf("CircleShape") then
                 local cx, cy = body:getWorldPoints(shape:getPoint())
                 local renderMatrix = renderTransformation:transform({{cx}, {cy}, {1}})
                 local position = {x = renderMatrix[1][1], y = renderMatrix[2][1]}
-                print(inspect(position))
+                --print(inspect(position))
                 love.graphics.circle("line", position.x, position.y, shape:getRadius())
+
+                -- Get rotation line
+                local circlePoint = {x = position.x, y = position.x + player.size.x }
+                local lineEnd = rotate_point(position, circlePoint, player.rotation + (math.pi/2))
+                --print('Rotation line: ', inspect(lineEnd))
+                --print('Theta: ', player.rotation + math.pi / 2)
+                love.graphics.line(position.x, position.y, lineEnd.x, lineEnd.y)
             elseif shape:typeOf("PolygonShape") then
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
             else 
-                print('Drawing ' .. shape:type())
                 x1, y1, x2, y2 = shape:getPoints()
                 --print('BT Point A', x1, y1, 'Point B', x2, y2)
                 local pointA = renderTransformation:transform_to_point({{x1}, {y1}, {1}})
@@ -139,7 +146,7 @@ function love.load()
 end
 
 function createPlayerPhysics()
-    player.body = love.physics.newBody(game.world, 20, 20, 'dynamic')
+    player.body = love.physics.newBody(game.world, game.width / 2, game.height / 2, 'dynamic')
     player.body:setLinearDamping(5)
     local pShape = love.physics.newCircleShape(player.size.x)
     local pFixture = love.physics.newFixture(player.body, pShape, 1)
@@ -200,12 +207,15 @@ function love.keyreleased(key)
 end
 
 function love.mousemoved(x, y, dx, dy, isTouch)
-    --print("player: x[" .. player.position.x .."] y[" .. player.position.y .. "]")
     --print("mouse: x[" .. x .. "] y[" .. y .."]")
     local px, py = player.body:getPosition()
     if game.state == states.PLAYING then
-       local theta = get_angle({x = px, y = py}, {x = x, y = y})
-       player.rotation = theta
+        local translated = renderTransformation:transform_to_point({{px}, {py}, {1}})
+        px = translated.x
+        py = translated.y
+        --print("player: x[" .. px .."] y[" .. py .. "]")
+        local theta = get_angle({x = px, y = py}, {x = x, y = y})
+        player.rotation = theta
     end
 end
 
