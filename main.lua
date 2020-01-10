@@ -34,6 +34,10 @@ stateHandler[states.MAIN_MENU] = {
 player = {
     body = nil,
     rotation = 0,
+    position = {
+        x = 0,
+        y = 0
+    },
     size = {
         x = 10,
         y = 10
@@ -41,9 +45,13 @@ player = {
 }
 
 renderPlane = { x = 0, y = love.graphics.getHeight() }
+
 local renderTransformation = TransformationMatrix:new()
 renderTransformation:translate(renderPlane.x, renderPlane.y)
 renderTransformation:reflect_y()
+
+local rotationTransformation = TransformationMatrix:new()
+
 
 function playerControls()
     local vx, vy = player.body:getLinearVelocity()
@@ -77,6 +85,22 @@ function playingUpdate(dt)
     playerControls()
 end
 
+function drawPlayerAngle()
+    local mouseX, mouseY = love.mouse.getPosition()
+    --print('Mouse X: ', mouseX, ' Y: ', mouseY)
+    local position = player.position
+    --print('playerX: ', position.x, 'playerY: ', position.y)
+    local deltaX = mouseX - position.x
+    local deltaY = (position.y - mouseY)
+    -- Calculates angle betweeen player and mouse
+    local radians = math.atan2(deltaY, deltaX) -- (math.pi / 2)
+    print('Radians: ', radians)
+    local line = {
+        p1 = { x = position.x, y = position.y},
+        p2 = { x = position.y, y = position.x + player.size.x}
+    }
+end
+
 function playingDraw()
     -- Draw some world shapes for collision debugging
     for _, body in pairs(game.world:getBodies()) do
@@ -88,15 +112,12 @@ function playingDraw()
                 local cx, cy = body:getWorldPoints(shape:getPoint())
                 local renderMatrix = renderTransformation:transform({{cx}, {cy}, {1}})
                 local position = {x = renderMatrix[1][1], y = renderMatrix[2][1]}
+                player.position = position
                 --print(inspect(position))
                 love.graphics.circle("line", position.x, position.y, shape:getRadius())
-
-                -- Get rotation line
-                local circlePoint = {x = position.x, y = position.x + player.size.x }
-                local lineEnd = rotate_point(position, circlePoint, player.rotation)
-                --print('Rotation line: ', inspect(lineEnd))
-                --print('Theta: ', player.rotation + math.pi / 2)
-                love.graphics.line(position.x, position.y, lineEnd.x, lineEnd.y)
+                if body:getUserData() == 'player' then
+                    drawPlayerAngle()
+                end
             elseif shape:typeOf("PolygonShape") then
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
             else 
@@ -148,6 +169,7 @@ end
 function createPlayerPhysics()
     player.body = love.physics.newBody(game.world, game.width / 2, game.height / 2, 'dynamic')
     player.body:setLinearDamping(5)
+    player.body:setUserData('player')
     local pShape = love.physics.newCircleShape(player.size.x)
     local pFixture = love.physics.newFixture(player.body, pShape, 1)
 end
@@ -208,15 +230,6 @@ end
 
 function love.mousemoved(x, y, dx, dy, isTouch)
     --print("mouse: x[" .. x .. "] y[" .. y .."]")
-    local px, py = player.body:getPosition()
-    if game.state == states.PLAYING then
-        local translated = renderTransformation:transform_to_point({{px}, {py}, {1}})
-        px = translated.x
-        py = translated.y
-        --print("player: x[" .. px .."] y[" .. py .. "]")
-        local theta = get_angle({x = px, y = py}, {x = x, y = y})
-        player.rotation = theta
-    end
 end
 
 function love.quit()
