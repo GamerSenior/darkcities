@@ -93,11 +93,11 @@ function playingDraw()
                 love.graphics.polygon("line", body:getWorldPoints(shape:getPoints()))
             else 
                 print('Drawing ' .. shape:type())
-                x1, y1, x2, y2 = body:getWorldPoints(shape:getPoints())
-                print('Point A', x1, y1, 'Point B', x2, y2)
+                x1, y1, x2, y2 = shape:getPoints()
+                --print('BT Point A', x1, y1, 'Point B', x2, y2)
                 local pointA = renderTransformation:transform_to_point({{x1}, {y1}, {1}})
                 local pointB = renderTransformation:transform_to_point({{x2}, {y2}, {1}})
-                print('Point A', inspect(pointA), 'Point B', inspect(pointB))
+                --print('AT Point A', inspect(pointA), 'Point B', inspect(pointB))
                 love.graphics.line(pointA.x, pointA.y, pointB.x, pointB.y)
             end
         end
@@ -139,17 +139,22 @@ function love.load()
 end
 
 function createPlayerPhysics()
-    player.body = love.physics.newBody(game.world, 0, 0, 'dynamic')
+    player.body = love.physics.newBody(game.world, 20, 20, 'dynamic')
     player.body:setLinearDamping(5)
     local pShape = love.physics.newCircleShape(player.size.x)
     local pFixture = love.physics.newFixture(player.body, pShape, 1)
 end
 
 function createWorldBoundries()
-    createLine(createPoint(0, 0), createPoint(game.width, 0))
-    --createLine(createPoint(game.width, 0), createPoint(game.width, game.height))
-    --createLine(createPoint(game.width, game.height), createPoint(0, game.height))
-    --createLine(createPoint(0, game.height), createPoint(0, 0))
+    local pA = createPoint(0, 0)
+    local pB = createPoint(0, 600)
+    local pC = createPoint(800, 600)
+    local pD = createPoint(800, 0)
+
+    createLine(pA, pB)
+    createLine(pA, pD)
+    createLine(pB, pC)
+    createLine(pC, pD)
 end
 
 function createPoint(x, y)
@@ -162,6 +167,8 @@ function createLine(pointA, pointB)
     local lineBody = love.physics.newBody(game.world, pointA.x, pointA.y, 'static')
     local lineShape = love.physics.newEdgeShape(pointA.x, pointA.y, pointB.x, pointB.y)
     local lineFixture = love.physics.newFixture(lineBody, lineShape, 1)
+
+    print(lineBody:getWorldPoints(lineShape:getPoints()))
 end
 
 function love.update(dt)
