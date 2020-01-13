@@ -1,6 +1,7 @@
-require('rendermath')
 require('transformationMatrix')
+local vector = require('lib/vector')
 local inspect = require('lib/inspect')
+local Signal = require('lib/signal')
 
 states = {
     MAIN_MENU = 0,
@@ -77,6 +78,12 @@ function playerControls()
             player.body:applyForce(0, -500)
         end
     end
+
+    if love.mouse.isDown(1) then
+        local x, y  = player.position:unpack()
+        local angle = player.rotation
+        Signal.emit('shoot', x, y, angle)
+    end
 end
 
 function playingUpdate(dt)
@@ -89,16 +96,18 @@ function drawPlayerAngle()
     local mouseX, mouseY = love.mouse.getPosition()
     --print('Mouse X: ', mouseX, ' Y: ', mouseY)
     local position = player.position
-    --print('playerX: ', position.x, 'playerY: ', position.y)
+    print('playerX: ', position.x, 'playerY: ', position.y)
     local deltaX = mouseX - position.x
     local deltaY = (position.y - mouseY)
     -- Calculates angle betweeen player and mouse
-    local radians = math.atan2(deltaY, deltaX) -- (math.pi / 2)
+    local radians = -math.atan2(deltaY, deltaX) - (math.pi / 2)
     print('Radians: ', radians)
     local line = {
-        p1 = { x = position.x, y = position.y},
-        p2 = { x = position.y, y = position.x + player.size.x}
+        p1 = vector(position.x, position.y),
+        p2 = vector(position.x, position.y + player.size.x)
     }
+    line.p2 = (line.p2 - line.p1):rotated(radians) + line.p1
+    love.graphics.line(line.p1.x, line.p1.y, line.p2.x, line.p2.y)
 end
 
 function playingDraw()
@@ -112,7 +121,7 @@ function playingDraw()
                 local cx, cy = body:getWorldPoints(shape:getPoint())
                 local renderMatrix = renderTransformation:transform({{cx}, {cy}, {1}})
                 local position = {x = renderMatrix[1][1], y = renderMatrix[2][1]}
-                player.position = position
+                player.position = vector(position.x, position.y)
                 --print(inspect(position))
                 love.graphics.circle("line", position.x, position.y, shape:getRadius())
                 if body:getUserData() == 'player' then
@@ -163,6 +172,7 @@ function love.load()
 
     game.world = love.physics.newWorld(0, 0, true)
     createPlayerPhysics()
+    createPlayerHandlers()
     createWorldBoundries()
 end
 
@@ -172,6 +182,16 @@ function createPlayerPhysics()
     player.body:setUserData('player')
     local pShape = love.physics.newCircleShape(player.size.x)
     local pFixture = love.physics.newFixture(player.body, pShape, 1)
+end
+
+function createPlayerHandlers()
+    Signal.register('shoot', function(x, y, angle)
+        local bulletBody = love.physics.newBody(game.world, x, y, 'dynamic')
+        local bulletShape = love.physics.newCircleShape(5)
+        love.physics.newFixture(bulletBody, bulletShape)
+        local impulseVector = vector.fromPolar(angle, 10)
+        bulletBody:applyLinearImpulse(impulseVector:unpack())
+    end)
 end
 
 function createWorldBoundries()
