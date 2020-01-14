@@ -1,7 +1,7 @@
 require('transformationMatrix')
-local vector = require('lib/vector')
-local inspect = require('lib/inspect')
-local Signal = require('lib/signal')
+local vector = require 'lib/vector'
+local inspect = require 'lib/inspect'
+local Signal = require 'lib/signal'
 
 states = {
     MAIN_MENU = 0,
@@ -35,10 +35,7 @@ stateHandler[states.MAIN_MENU] = {
 player = {
     body = nil,
     rotation = 0,
-    position = {
-        x = 0,
-        y = 0
-    },
+    position = vector(0, 0),
     size = {
         x = 10,
         y = 10
@@ -82,7 +79,8 @@ function playerControls()
     if love.mouse.isDown(1) then
         local x, y  = player.position:unpack()
         local angle = player.rotation
-        Signal.emit('shoot', x, y, angle)
+        local size = player.size.x
+        Signal.emit('shoot', x, y, angle, size)
     end
 end
 
@@ -96,12 +94,14 @@ function drawPlayerAngle()
     local mouseX, mouseY = love.mouse.getPosition()
     --print('Mouse X: ', mouseX, ' Y: ', mouseY)
     local position = player.position
-    print('playerX: ', position.x, 'playerY: ', position.y)
+    -- print('playerX: ', position.x, 'playerY: ', position.y)
     local deltaX = mouseX - position.x
     local deltaY = (position.y - mouseY)
     -- Calculates angle betweeen player and mouse
     local radians = -math.atan2(deltaY, deltaX) - (math.pi / 2)
-    print('Radians: ', radians)
+    --print('Radians: ', radians)
+    player.rotation = radians
+    love.graphics.print("Player: \nangle: " .. radians, 10, 10)
     local line = {
         p1 = vector(position.x, position.y),
         p2 = vector(position.x, position.y + player.size.x)
@@ -185,11 +185,16 @@ function createPlayerPhysics()
 end
 
 function createPlayerHandlers()
-    Signal.register('shoot', function(x, y, angle)
-        local bulletBody = love.physics.newBody(game.world, x, y, 'dynamic')
+    Signal.register('shoot', function(x, y, angle, size)
+        print('Angle: ', angle)
+        local impulseVector = vector.fromPolar(angle, 50)
+        local positionVector = vector(x, y) + vector.fromPolar(angle, size)
+        print('Position vector: ', positionVector)
+        x1, y1 = positionVector:unpack()
+        local bulletBody = love.physics.newBody(game.world, x1, y1, 'dynamic')
         local bulletShape = love.physics.newCircleShape(5)
         love.physics.newFixture(bulletBody, bulletShape)
-        local impulseVector = vector.fromPolar(angle, 10)
+        print(impulseVector)
         bulletBody:applyLinearImpulse(impulseVector:unpack())
     end)
 end
